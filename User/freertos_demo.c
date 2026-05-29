@@ -4,7 +4,7 @@
  * @author      ALIENTEK
  * @version     V1.4
  * @date        2026-05-29
- * @brief       FreeRTOS 任务实践：时间片轮转调度实验
+ * @brief       FreeRTOS 任务实践：任务状态查询
  * @license     Copyright (c) 2020-2032,  ALIENTEK
  ****************************************************************************************************
  * @attention
@@ -24,11 +24,11 @@
 #include "./BSP/LCD/lcd.h"
 #include "./BSP/KEY/key.h"
 #include "./SYSTEM/delay/delay.h"
+#include "./MALLOC/malloc.h"
 
 /*FreeRTOS*********************************************************************************************/
 #include "FreeRTOS.h"
 #include "task.h"
-/* #include "list.h"   已被 task.h 间接包含，无需显式添加 */
 
 /******************************************************************************************************/
 /*FreeRTOS配置*/
@@ -52,7 +52,7 @@ void task1(void * pvParameters);
 /* TASK2 任务配置
  * 优先级: 3 堆栈大小:512 任务句柄:task2_handler
  */
-#define TASK2_PRIO				2
+#define TASK2_PRIO				3
 #define TASK2_STACK_SIZE 		128
 TaskHandle_t	task2_handler;
 void task2(void * pvParameters);
@@ -95,29 +95,43 @@ void start_task(void * pvParameters)
 	taskEXIT_CRITICAL();		/* 退出临界区 */
 }
 
-/* 任务1: 时间片轮转调度演示 */
+/* 任务1: 实现LED每500ms闪烁 */
 void task1(void * pvParameters)
 {
-	uint32_t task1_num = 0;
 	while(1)
 	{
-		taskENTER_CRITICAL();		/* 进入临界区 */
-		printf("task1运行次数：%d\r\n", ++task1_num);
-		taskEXIT_CRITICAL();		/* 退出临界区 */
-		delay_ms(10);
+		LED0_TOGGLE();
+		vTaskDelay(500);
 	}
 }
 
-/* 任务2:时间片轮转调度演示 */
+/* 任务2:实现任务状态查询API函数 */
 void task2(void * pvParameters)
 {	
-	uint32_t task2_num = 0;
+	UBaseType_t priority_num = 0;
+	UBaseType_t task_count = 0;
+	UBaseType_t task_state = 0;
+	TaskStatus_t *pxTaskStatusArray = 0;
+
+	vTaskPrioritySet(task2_handler, 5);						/* 设置当前任务优先级为5 */
+	priority_num = uxTaskPriorityGet(task2_handler);		/* 获得当前任务优先级 */
+	printf("task2当前任务优先级为：%ld\r\n",priority_num);
+
+	task_count = uxTaskGetNumberOfTasks();					/* 获取当前系统中任务的数量 */
+	printf("当前系统中任务的数量为：%ld\r\n",task_count);
+
+
+	pxTaskStatusArray = mymalloc(SRAMIN, (task_count * sizeof(TaskStatus_t)));		/* 为保存任务状态信息的数组分配内存空间 */
+	task_state = uxTaskGetSystemState(pxTaskStatusArray, task_count, NULL);			/* 获取当前系统中任务的状态 */
+	printf("任务名\t\t任务优先级\t任务编号\r\n");
+	for(int i = 0; i < task_count; i++)
+	{
+		printf("%s\t\t%ld\t\t%ld\r\n", pxTaskStatusArray[i].pcTaskName, pxTaskStatusArray[i].uxCurrentPriority, pxTaskStatusArray[i].xTaskNumber);
+	}
+
 	while(1)
 	{
-		taskENTER_CRITICAL();		/* 进入临界区 */
-		printf("task2运行次数：%d\r\n", ++task2_num);
-		taskEXIT_CRITICAL();		/* 退出临界区 */
-		delay_ms(10);
-		
+		vTaskDelay(1000);
 	}
 }
+
