@@ -111,6 +111,7 @@ void task1(void * pvParameters)
 void task2(void * pvParameters)
 {	
 	UBaseType_t priority_num = 0;
+<<<<<<< HEAD
 	UBaseType_t task_count = 0;		
 	UBaseType_t task_state = 0;
 	UBaseType_t stack_water_mark = 0;
@@ -120,10 +121,17 @@ void task2(void * pvParameters)
 	eTaskState task_state_enum = eInvalid;
 
 	/*实验一：查询和设置任务优先级*/
+=======
+	UBaseType_t task_count = 0;
+	UBaseType_t task_state = 0;
+	TaskStatus_t *pxTaskStatusArray = 0;
+
+>>>>>>> 59338953e2b17de178dceb9d4967be871695f3e8
 	vTaskPrioritySet(task2_handler, 5);						/* 设置当前任务优先级为5 */
 	priority_num = uxTaskPriorityGet(task2_handler);		/* 获得当前任务优先级 */
 	printf("task2当前任务优先级为：%ld\r\n",priority_num);
 
+<<<<<<< HEAD
 	/*实验二：查询任务状态*/
 	task_count = uxTaskGetNumberOfTasks();					/* 获取当前系统中任务的数量 */
 	printf("当前系统中任务的数量为：%ld\r\n",task_count);
@@ -187,6 +195,22 @@ void task2(void * pvParameters)
 	printf("任务二最小剩余栈空间为：%lu\r\n", stack_water_mark);
 	while(1)
 	{	
+=======
+	task_count = uxTaskGetNumberOfTasks();					/* 获取当前系统中任务的数量 */
+	printf("当前系统中任务的数量为：%ld\r\n",task_count);
+
+
+	pxTaskStatusArray = mymalloc(SRAMIN, (task_count * sizeof(TaskStatus_t)));		/* 为保存任务状态信息的数组分配内存空间 */
+	task_state = uxTaskGetSystemState(pxTaskStatusArray, task_count, NULL);			/* 获取当前系统中任务的状态 */
+	printf("任务名\t\t任务优先级\t任务编号\r\n");
+	for(int i = 0; i < task_count; i++)
+	{
+		printf("%s\t\t%ld\t\t%ld\r\n", pxTaskStatusArray[i].pcTaskName, pxTaskStatusArray[i].uxCurrentPriority, pxTaskStatusArray[i].xTaskNumber);
+	}
+
+	while(1)
+	{
+>>>>>>> 59338953e2b17de178dceb9d4967be871695f3e8
 		vTaskDelay(1000);
 	}
 }
